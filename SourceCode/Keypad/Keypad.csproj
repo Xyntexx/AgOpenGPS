@@ -17,4 +17,7 @@
       <SubType>UserControl</SubType>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="4.6.0" />
+  </ItemGroup>
 </Project>

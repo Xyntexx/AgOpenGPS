@@ -1,6 +1,4 @@
-﻿using AgIO.Controls;
-using AgIO.Properties;
-using Microsoft.Win32;
+﻿using AgIO.Properties;
 using System;
 using System.Drawing;
 using System.IO;
@@ -33,7 +31,8 @@ namespace AgIO
             foreach (FileInfo file in Files)
             {
                 string temp = Path.GetFileNameWithoutExtension(file.Name);
-                cboxOverWrite.Items.Add(temp);
+                if (temp.Trim() != "Default Profile")
+                    cboxOverWrite.Items.Add(temp);
             }
 
             if (cboxOverWrite.Items.Count == 0)
@@ -45,21 +44,27 @@ namespace AgIO
 
             DirectoryInfo dinfo2 = new DirectoryInfo(RegistrySettings.profileDirectory);
             FileInfo[] Files2 = dinfo2.GetFiles("*.xml");
-            foreach (FileInfo file in Files2)
+            if (Files2.Length == 0)
             {
-                string temp = Path.GetFileNameWithoutExtension(file.Name);
-                if (temp != RegistrySettings.profileName)
-                    cboxChooseExisting.Items.Add(temp);
+                cboxChooseExisting.Enabled = false;
             }
-
-            cboxChooseExisting.Enabled = cboxChooseExisting.Items.Count > 0;
+            else
+            {
+                foreach (FileInfo file in Files2)
+                {
+                    string temp = Path.GetFileNameWithoutExtension(file.Name);
+                    if (temp.Trim() != "Default Profile")
+                    {
+                        cboxChooseExisting.Items.Add(temp);
+                    }
+                }
+            }
         }
 
         private void cboxOverWrite_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string newProfile = SanitizeFileName(cboxOverWrite.SelectedItem.ToString()).Trim();
             DialogResult result3 = MessageBox.Show(
-                "Overwrite: " + newProfile + ".xml",
+                "Overwrite: " + cboxOverWrite.SelectedItem.ToString() + ".xml",
                 "Save And Return",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question,
@@ -68,7 +73,12 @@ namespace AgIO
             if (result3 == DialogResult.Yes)
             {
                 //save profile in registry
-                RegistrySettings.Save(RegKeys.profileName, newProfile);
+                Settings.User.Save();
+
+                RegistrySettings.profileName = SanitizeFileName(cboxOverWrite.SelectedItem.ToString().Trim());
+                
+                RegistrySettings.Save("ProfileName", RegistrySettings.profileName);
+                Settings.User.Save();
 
                 Close();
             }
@@ -92,15 +102,17 @@ namespace AgIO
 
         private void btnSaveNewProfile_Click(object sender, EventArgs e)
         {
-            string newProfile = SanitizeFileName(tboxCreateNew.Text).Trim();
-
-            if (newProfile.Length > 0)
+            if (tboxCreateNew.Text.Trim().Length > 0 && tboxCreateNew.Text.Trim() != "Default Profile")
             {
-                //save profile in registry
-                RegistrySettings.Save(RegKeys.profileName, newProfile);
-                
+                RegistrySettings.profileName = SanitizeFileName(tboxCreateNew.Text.ToString().Trim());
+
+                Settings.User.Save();
+
                 //reset to Default Profile and save
-                Settings.Default.Reset();
+                Settings.User.Reset();
+
+                RegistrySettings.Save("ProfileName", RegistrySettings.profileName);
+                Settings.User.Save();
 
                 DialogResult = DialogResult.Yes;
                 Close();
@@ -116,7 +128,7 @@ namespace AgIO
         {
             if (mf.isKeyboardOn)
             {
-                ((TextBox)sender).ShowKeyboard(this);
+                mf.KeyboardToText((TextBox)sender, this);
                 btnSaveNewProfile.Focus();
             }
         }
@@ -137,49 +149,64 @@ namespace AgIO
             {
                 btnSaveAs.BackColor = Color.Transparent;
             }
-
         }
 
         private void tboxSaveAs_Click(object sender, EventArgs e)
         {
             if (mf.isKeyboardOn)
             {
-                ((TextBox)sender).ShowKeyboard(this);
+                mf.KeyboardToText((TextBox)sender, this);
                 btnSaveNewProfile.Focus();
             }
         }
 
         private void btnSaveAs_Click(object sender, EventArgs e)
         {
-            string newProfile = SanitizeFileName(tboxSaveAs.Text.ToString()).Trim();
-            if (newProfile.Length > 0)
+            if (tboxSaveAs.Text.Trim().Length > 0 && tboxSaveAs.Text.Trim() != "Default Profile")
             {
-                //save profile in registry
-                RegistrySettings.Save(RegKeys.profileName, newProfile);
+                RegistrySettings.profileName = SanitizeFileName(tboxSaveAs.Text.ToString().Trim());
 
-                Settings.Default.Save();
+                RegistrySettings.Save("ProfileName", RegistrySettings.profileName);
+                Settings.User.Save();
 
                 DialogResult = DialogResult.OK;
                 Close();
             }
             else
             {
-                _ = MessageBox.Show("Enter a File Name To Save...",
-                "Save And Return", MessageBoxButtons.OK);
+                if (tboxSaveAs.Text.Trim() != "Default Profile")
+                {
+                    _ = MessageBox.Show("Enter a File Name To Save...",
+                    "Save And Return", MessageBoxButtons.OK);
+                }
+                else
+                {
+                    _ = MessageBox.Show("Enter a File Name To Save...",
+                    "You Cannot Use Default Profile", MessageBoxButtons.OK);
+                }
             }
         }
 
         //Load Existing Profile
         private void cboxChooseExisting_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string newProfile = SanitizeFileName(cboxChooseExisting.SelectedItem.ToString()).Trim();
-            //save current profile
-            RegistrySettings.Save(RegKeys.profileName, newProfile);
+            if (cboxChooseExisting.SelectedItem.ToString().Trim() == "Default Profile")
+            {
+                mf.YesMessageBox("Choose a Different Profile, Or Create a New One");
+            }
+            else
+            {
+                //save current profile
+                Settings.User.Save();
 
-            Settings.Default.Load();
+                RegistrySettings.profileName = cboxChooseExisting.SelectedItem.ToString().Trim();
 
-            DialogResult = DialogResult.Yes;
-            Close();
+                RegistrySettings.Save("ProfileName", RegistrySettings.profileName);
+                Settings.User.Load();
+
+                DialogResult = DialogResult.Yes;
+                Close();
+            }
         }
 
         //functions
@@ -194,6 +221,5 @@ namespace AgIO
         {
             return InvalidFileRegex.Replace(fileName, string.Empty);
         }
-
     }
 }

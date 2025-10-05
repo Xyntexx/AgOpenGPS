@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Forms;
-using AgIO.Controls;
 
 namespace AgIO
 {
@@ -74,7 +73,7 @@ namespace AgIO
         {
             if (mf.isKeyboardOn)
             {
-                ((TextBox)sender).ShowKeyboard(this);
+                mf.KeyboardToText((TextBox)sender, this);
             }
         }
     }

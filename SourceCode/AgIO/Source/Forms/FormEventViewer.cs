@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
-using AgLibrary.Logging;
 
 namespace AgIO
 {
     public partial class FormEventViewer : Form
     {
         //class variables
-        string filename;
+        private string filename;
 
         public FormEventViewer(string _filename)
         {
@@ -37,7 +36,7 @@ namespace AgIO
 
             rtbLogViewer.AppendText(" **** Current Session Below ***** \r\n\r\n");
 
-            rtbLogViewer.AppendText(Log.sbEvents.ToString());
+            rtbLogViewer.AppendText(Log.sbEvent.ToString());
         }
 
         private void btnExit_Click(object sender, EventArgs e)
@@ -68,7 +67,7 @@ namespace AgIO
 
             rtbLogViewer.AppendText(" **** Current Session Below ***** \r\n\r\n");
 
-            rtbLogViewer.AppendText(Log.sbEvents.ToString());
+            rtbLogViewer.AppendText(Log.sbEvent.ToString());
         }
     }
 }

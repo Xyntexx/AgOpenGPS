@@ -1,6 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Globalization;
+using System.Threading;
+using Microsoft.Win32;
 
 /* 
  * 
@@ -14,16 +22,18 @@ namespace Keypad
 {
     public partial class Keyboard : GenericKeypad
     {
+        string language;
         public Keyboard()
         {
             InitializeComponent();
         }
-
         private void Keyboard_Load(object sender, EventArgs e)
         {
+            RegistryKey regKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\AgOpenGPS");
+            language = regKey.GetValue("Language").ToString();
             changeCase();
 
-            switch (CultureInfo.CurrentCulture.Name)
+            switch (language)
             {
                 case "fr": // ------------------------------------------French
 
@@ -95,7 +105,7 @@ namespace Keypad
         private void changeCase()
         {
 
-            switch (CultureInfo.CurrentCulture.Name)
+            switch (language)
             {
                 case "fr": // ------------------------------------------French
                     if (chk_shift.Checked == true)

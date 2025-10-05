@@ -1,7 +1,6 @@
 ﻿using AgIO.Properties;
-using AgLibrary.Logging;
-using Microsoft.Win32;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -9,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -31,7 +31,21 @@ namespace AgIO
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
+        [DllImport("user32.dll")]
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        [DllImport("user32.dll")]
+        private static extern bool MoveWindow(IntPtr Handle, int x, int y, int w, int h, bool repaint);
+
+        //static readonly int GWL_STYLE = -16;
+        //static readonly int WS_VISIBLE = 0x10000000;
         //key event to restore window
+
+        private readonly Stopwatch algoTimer = new Stopwatch();
+
         private const int ALT = 0xA4;
 
         private const int EXTENDEDKEY = 0x1;
@@ -42,15 +56,13 @@ namespace AgIO
 
         public StringBuilder logMonitorSentence = new StringBuilder();
         public StringBuilder logUDPSentence = new StringBuilder();
+
         public bool isLogNMEA, isLogMonitorOn, isUDPMonitorOn, isGPSLogOn, isNTRIPLogOn;
 
-        private StringBuilder sbRTCM = new StringBuilder();
+        public bool isKeyboardOn = true, isFlash = false;
+        public int gpsOutCount = 0;
 
-        public bool isKeyboardOn = true;
-
-        public bool isSendToSerial = true, isSendToUDP = false;
-
-        public bool isGPSSentencesOn = false, isSendNMEAToUDP;
+        public bool isGPSSentencesOn = false; //, isSendNMEAToUDP;
 
         //timer variables
         public double secondsSinceStart, twoSecondTimer, tenSecondTimer, threeMinuteTimer, pingSecondsStart;
@@ -59,11 +71,7 @@ namespace AgIO
 
         public bool isNTRIPToggle;
 
-        //usually 256 - send ntrip to serial in chunks
-        public int packetSizeNTRIP;
-
-        public bool lastHelloGPS, lastHelloAutoSteer, lastHelloMachine, lastHelloIMU;
-        public bool isConnectedIMU, isConnectedSteer, isConnectedMachine;
+        public bool lastHelloGPS, lastHelloAutoSteer, lastHelloMachine, lastHelloIMU, lastHelloGPSTool, lastHelloGPSOutSerial;
 
         //is the fly out displayed
         public bool isViewAdvanced = false;
@@ -73,15 +81,26 @@ namespace AgIO
 
         public int focusSkipCounter = 310;
 
+        public CNMEA pnGPS;
+
+        public CNMEA_Tool pnGPSTool;
+
+
         public FormLoop()
         {
             InitializeComponent();
+            bgGPSOut.DoWork += bgGPSOut_DoWork;
+            bgGPSOut.ProgressChanged += bgGPSOut_ProgressChanged;
+            bgGPSOut.WorkerReportsProgress = true;
         }
 
         //First run
         private void FormLoop_Load(object sender, EventArgs e)
         {
-            if (Settings.Default.setUDP_isOn)
+            pnGPS = new CNMEA(this);
+            pnGPSTool = new CNMEA_Tool(this);
+
+            if (Settings.User.setUDP_isOn)
             {
                 LoadUDPNetwork();
                 Log.EventWriter("UDP Network Is On");
@@ -108,18 +127,9 @@ namespace AgIO
             }
 
             //small view
-            this.Width = 428;
+            this.Width = 500;
 
             LoadLoopback();
-
-            isSendNMEAToUDP = Properties.Settings.Default.setUDP_isSendNMEAToUDP;
-
-            packetSizeNTRIP = Properties.Settings.Default.setNTRIP_packetSize;
-
-            isSendToSerial = Settings.Default.setNTRIP_sendToSerial;
-            isSendToUDP = Settings.Default.setNTRIP_sendToUDP;
-
-            //lblMount.Text = Properties.Settings.Default.setNTRIP_mount;
 
             lblGPS1Comm.Text = "";
             lblIMUComm.Text = "";
@@ -127,50 +137,44 @@ namespace AgIO
             lblMod2Comm.Text = "";
 
             //set baud and port from last time run
-            baudRateGPS = Settings.Default.setPort_baudRateGPS;
-            portNameGPS = Settings.Default.setPort_portNameGPS;
-            wasGPSConnectedLastRun = Settings.Default.setPort_wasGPSConnected;
-            if (wasGPSConnectedLastRun)
+            if (Settings.User.setPort_wasGPSConnected)
             {
                 OpenGPSPort();
-                if (spGPS.IsOpen) lblGPS1Comm.Text = portNameGPS;
+                if (spGPS.IsOpen) lblGPS1Comm.Text = Settings.User.setPort_portNameGPS;
+            }
+
+            //set baud and port from last time run
+            if (Settings.User.setPort_wasGPSOutConnected)
+            {
+                OpenGPSOutPort();
+                if (spGPSOut.IsOpen) lblGPSOut1Comm.Text = Settings.User.setPort_portNameGPSOut;
             }
 
             // set baud and port for rtcm from last time run
-            baudRateRtcm = Settings.Default.setPort_baudRateRtcm;
-            portNameRtcm = Settings.Default.setPort_portNameRtcm;
-            wasRtcmConnectedLastRun = Settings.Default.setPort_wasRtcmConnected;
-
-            if (wasRtcmConnectedLastRun)
+            if (Settings.User.setPort_wasRtcmConnected)
             {
                 OpenRtcmPort();
             }
 
             //Open IMU
-            portNameIMU = Settings.Default.setPort_portNameIMU;
-            wasIMUConnectedLastRun = Settings.Default.setPort_wasIMUConnected;
-            if (wasIMUConnectedLastRun)
+            if (Settings.User.setPort_wasIMUConnected)
             {
                 OpenIMUPort();
-                if (spIMU.IsOpen) lblIMUComm.Text = portNameIMU;
+                if (spIMU.IsOpen) lblIMUComm.Text = Settings.User.setPort_portNameIMU;
             }
 
             //same for SteerModule port
-            portNameSteerModule = Settings.Default.setPort_portNameSteer;
-            wasSteerModuleConnectedLastRun = Settings.Default.setPort_wasSteerModuleConnected;
-            if (wasSteerModuleConnectedLastRun)
+            if (Settings.User.setPort_wasSteerModuleConnected)
             {
                 OpenSteerModulePort();
-                if (spSteerModule.IsOpen) lblMod1Comm.Text = portNameSteerModule;
+                if (spSteerModule.IsOpen) lblMod1Comm.Text = Settings.User.setPort_portNameSteer;
             }
 
             //same for MachineModule port
-            portNameMachineModule = Settings.Default.setPort_portNameMachine;
-            wasMachineModuleConnectedLastRun = Settings.Default.setPort_wasMachineModuleConnected;
-            if (wasMachineModuleConnectedLastRun)
+            if (Settings.User.setPort_wasMachineModuleConnected)
             {
                 OpenMachineModulePort();
-                if (spMachineModule.IsOpen) lblMod2Comm.Text = portNameMachineModule;
+                if (spMachineModule.IsOpen) lblMod2Comm.Text = Settings.User.setPort_portNameMachine;
             }
 
             ConfigureNTRIP();
@@ -189,11 +193,10 @@ namespace AgIO
                 }
             }
 
-            isConnectedIMU = cboxIsIMUModule.Checked = Properties.Settings.Default.setMod_isIMUConnected;
-            isConnectedSteer = cboxIsSteerModule.Checked = Properties.Settings.Default.setMod_isSteerConnected;
-            isConnectedMachine = cboxIsMachineModule.Checked = Properties.Settings.Default.setMod_isMachineConnected;
+            cboxIsIMUModule.Checked = Settings.User.setMod_isIMUConnected;
+            cboxIsSteerModule.Checked = Settings.User.setMod_isSteerConnected;
+            cboxIsMachineModule.Checked = Settings.User.setMod_isMachineConnected;
 
-            //On or off the module rows
             SetModulesOnOff();
 
             oneSecondLoopTimer.Enabled = true;
@@ -205,12 +208,15 @@ namespace AgIO
             pictureBox1.Top = 0;
             //pictureBox1.Dock = DockStyle.Fill;:
 
+            //On or off the module rows
+            SetModulesOnOff();
+
             //update Caster IP from URL, just use the old one if can't find
-            if (isNTRIP_RequiredOn)
+            if (Settings.User.setNTRIP_isOn)
             {
-                //broadCasterIP = Properties.Settings.Default.setNTRIP_casterIP; //Select correct Address
-                broadCasterIP = null;
-                string actualIP = Properties.Settings.Default.setNTRIP_casterURL.Trim();
+                //broadCasterIP = Settings.User.setNTRIP_casterIP; //Select correct Address
+                Settings.User.setNTRIP_casterIP = null;
+                string actualIP = Settings.User.setNTRIP_casterURL.Trim();
 
                 try
                 {
@@ -219,24 +225,23 @@ namespace AgIO
                     {
                         if (address.AddressFamily == AddressFamily.InterNetwork)
                         {
-                            broadCasterIP = address.ToString().Trim();
-                            Properties.Settings.Default.setNTRIP_casterIP = broadCasterIP;
-                            Properties.Settings.Default.Save();
+                            Settings.User.setNTRIP_casterIP = address.ToString().Trim();
+
                             break;
                         }
                     }
 
-                    if (broadCasterIP == null) throw new NullReferenceException();
+                    if (Settings.User.setNTRIP_casterIP == null) throw new NullReferenceException();
                 }
                 catch (Exception ex)
                 {
                     Log.EventWriter(ex.ToString());
-                    TimedMessageBox(1500, "URL Not Located, Network Down?", "Cannot Find: " + Properties.Settings.Default.setNTRIP_casterURL);
+                    TimedMessageBox(1500, "URL Not Located, Network Down?", "Cannot Find: " + Settings.User.setNTRIP_casterURL);
                     //if we had a timer already, kill it
                     tmr?.Dispose();
 
                     //use last known
-                    broadCasterIP = Properties.Settings.Default.setNTRIP_casterIP; //Select correct Address
+                    Settings.User.setNTRIP_casterIP = Settings.User.setNTRIP_casterIP; //Select correct Address
 
                     // Close the socket if it is still open
                     if (clientSocket != null && clientSocket.Connected)
@@ -255,13 +260,10 @@ namespace AgIO
                 }
             }
 
-            //run gps_out or not
-            cboxAutoRunGPS_Out.Checked = Properties.Settings.Default.setDisplay_isAutoRunGPS_Out;
-            
             this.Text =
-            "AgIO  v" + Program.Version + " Profile: " + RegistrySettings.profileName;
+            "AgIO  v" + Application.ProductVersion.ToString(CultureInfo.InvariantCulture) + "   Profile: " + RegistrySettings.profileName;
 
-            if (RegistrySettings.profileName == "")
+            if (RegistrySettings.profileName == "Default Profile")
             {
                 Log.EventWriter("Using Default Profile At Start Warning");
 
@@ -274,30 +276,27 @@ namespace AgIO
                     {
                         Log.EventWriter("Program Reset: Saving or Selecting Profile");
 
+                        Settings.User.Save();
                         Program.Restart();
                     }
                 }
-                this.Text = "AgIO  v" + Program.Version + " Profile: "
+                this.Text = "AgIO  v" + Application.ProductVersion.ToString(CultureInfo.InvariantCulture) + "  Profile: "
                     + RegistrySettings.profileName;
             }
 
-            if (Properties.Settings.Default.setDisplay_isAutoRunGPS_Out)
+            if (Settings.User.setDisplay_isAutoRunGPS_Out)
             {
-                StartGPS_Out();
+                GPS_OutSettings();
                 Log.EventWriter("Run GPS_Out");
             }
-
         }
 
         private void FormLoop_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Settings.Default.setPort_wasGPSConnected = wasGPSConnectedLastRun;
-            Settings.Default.setPort_wasIMUConnected = wasIMUConnectedLastRun;
-            Settings.Default.setPort_wasSteerModuleConnected = wasSteerModuleConnectedLastRun;
-            Settings.Default.setPort_wasMachineModuleConnected = wasMachineModuleConnectedLastRun;
-            Settings.Default.setPort_wasRtcmConnected = wasRtcmConnectedLastRun;
-
-            Settings.Default.Save();
+            if (RegistrySettings.profileName != "Default Profile")
+                Settings.User.Save();
+            else
+                YesMessageBox("Using Default Profile" + "\r\n\r\n" + "Changes will NOT be Saved");
 
             if (loopBackSocket != null)
             {
@@ -324,9 +323,18 @@ namespace AgIO
             }
 
             Log.EventWriter("Program Exit: " +
-                DateTime.Now.ToString("f", CultureInfo.InvariantCulture) + "\n\r");
+                DateTime.Now.ToString("f", CultureInfo.CreateSpecificCulture(RegistrySettings.culture)) + "\n\r");
 
-            Log.FileSaveSystemEvents();
+            FileSaveSystemEvents();
+        }
+
+        public void FileSaveSystemEvents()
+        {
+            using (StreamWriter writer = new StreamWriter(Path.Combine(RegistrySettings.logsDirectory, "AgIO_Events_Log.txt"), true))
+            {
+                writer.Write(Log.sbEvent);
+                Log.sbEvent.Clear();
+            }
         }
 
         private void oneSecondLoopTimer_Tick(object sender, EventArgs e)
@@ -336,7 +344,7 @@ namespace AgIO
                 Controls.Remove(pictureBox1);
                 pictureBox1.Dispose();
                 oneSecondLoopTimer.Interval = 1000;
-                this.Width = 428;
+                this.Width = 500;
                 this.Height = 530;
                 return;
             }
@@ -347,9 +355,11 @@ namespace AgIO
 
             if (focusSkipCounter != 0)
             {
-                lblCurentLon.Text = longitude.ToString("N7");
-                lblCurrentLat.Text = latitude.ToString("N7");
+                lblCurentLon.Text = pnGPS.longitude.ToString("N7");
+                lblCurrentLat.Text = pnGPS.latitude.ToString("N7");
             }
+
+            lblGPSHz.Text = gpsHz.ToString("N2");
 
             //do all the NTRIP routines
             DoNTRIPSecondRoutine();
@@ -406,16 +416,6 @@ namespace AgIO
                 threeMinuteTimer = secondsSinceStart;
             }
 
-            // 1 Second Loop Part2
-            if (isViewAdvanced)
-            {
-                if (isNTRIP_RequiredOn)
-                {
-                    sbRTCM.Append(".");
-                    lblMessages.Text = sbRTCM.ToString();
-                }
-            }
-
             if (focusSkipCounter != 0)
             {
                 if (ntripCounter > 30)
@@ -441,24 +441,14 @@ namespace AgIO
             if (isViewAdvanced)
             {
                 pingSecondsStart = (DateTime.Now - Process.GetCurrentProcess().StartTime).TotalSeconds;
-                lblPing.Text = lblPingMachine.Text = "*";
+                lblPing.Text = lblPingMachine.Text = lblPingTool.Text = "*";
             }
 
             //send a hello to modules
             SendUDPMessage(helloFromAgIO, epModule);
 
-
-            //if (isLogNMEA)
-            //{
-            //    using (StreamWriter writer = new StreamWriter("zAgIO_log.txt", true))
-            //    {
-            //        writer.Write(logNMEASentence.ToString());
-            //    }
-            //    logNMEASentence.Clear();
-            //}
-
-            //if (focusSkipCounter < 310) lblSkipCounter.Text = focusSkipCounter.ToString();
-            //else lblSkipCounter.Text = "On";
+            if (isViewAdvanced) pingSecondsStart = (DateTime.Now - Process.GetCurrentProcess().StartTime).TotalSeconds;
+            SendUDPMessageTool(helloFromAgIO, epModuleTool);
         }
 
         private void TenSecondLoop()
@@ -482,55 +472,9 @@ namespace AgIO
                     }
                 }
 
-                if (isViewAdvanced && isNTRIP_RequiredOn)
-                {
-                    try
-                    {
-                        //add the uniques messages to all the new ones
-                        foreach (var item in aList)
-                        {
-                            rList.Add(item);
-                        }
-
-                        //sort and group using Linq
-                        sbRTCM.Clear();
-
-                        var g = rList.GroupBy(i => i)
-                            .OrderBy(grp => grp.Key);
-                        int count = 0;
-                        aList.Clear();
-
-                        //Create the text box of unique message numbers
-                        foreach (var grp in g)
-                        {
-                            aList.Add(grp.Key);
-                            sbRTCM.AppendLine(grp.Key + " - " + (grp.Count() - 1));
-                            count++;
-                        }
-
-                        rList?.Clear();
-
-                        //too many messages or trash
-                        if (count > 25)
-                        {
-                            aList?.Clear();
-                            sbRTCM.Clear();
-                            sbRTCM.Append("Reset..");
-                        }
-
-                        lblMessagesFound.Text = count.ToString();
-                    }
-                    catch
-                    {
-                        sbRTCM.Clear();
-                        sbRTCM.Append("Error");
-                        Log.EventWriter("RTCM List compilation error");
-                    }
-                }
-
                 #region Serial update
 
-                if (wasIMUConnectedLastRun)
+                if (Settings.User.setPort_wasIMUConnected)
                 {
                     if (!spIMU.IsOpen)
                     {
@@ -538,34 +482,43 @@ namespace AgIO
 
                         //tell AOG IMU is disconnected
                         SendToLoopBackMessageAOG(imuClose);
-                        wasIMUConnectedLastRun = false;
+                        Settings.User.setPort_wasIMUConnected = false;
                         lblIMUComm.Text = "";
                     }
                 }
 
-                if (wasGPSConnectedLastRun)
+                if (Settings.User.setPort_wasGPSConnected)
                 {
                     if (!spGPS.IsOpen)
                     {
-                        wasGPSConnectedLastRun = false;
+                        Settings.User.setPort_wasGPSConnected = false;
                         lblGPS1Comm.Text = "";
                     }
                 }
 
-                if (wasSteerModuleConnectedLastRun)
+                if (Settings.User.setPort_wasGPSOutConnected)
+                {
+                    if (!spGPSOut.IsOpen)
+                    {
+                        Settings.User.setPort_wasGPSOutConnected = false;
+                        lblGPSOut1Comm.Text = "";
+                    }
+                }
+
+                if (Settings.User.setPort_wasSteerModuleConnected)
                 {
                     if (!spSteerModule.IsOpen)
                     {
-                        wasSteerModuleConnectedLastRun = false;
+                        Settings.User.setPort_wasSteerModuleConnected = false;
                         lblMod1Comm.Text = "";
                     }
                 }
 
-                if (wasMachineModuleConnectedLastRun)
+                if (Settings.User.setPort_wasMachineModuleConnected)
                 {
                     if (!spMachineModule.IsOpen)
                     {
-                        wasMachineModuleConnectedLastRun = false;
+                        Settings.User.setPort_wasMachineModuleConnected = false;
                         lblMod2Comm.Text = "";
                     }
                 }
@@ -586,7 +539,7 @@ namespace AgIO
         {
             bool currentHello;
 
-            if (isConnectedMachine)
+            if (Settings.User.setMod_isMachineConnected)
             {
                 currentHello = traffic.helloFromMachine < 3;
 
@@ -599,7 +552,7 @@ namespace AgIO
                 }
             }
 
-            if (isConnectedSteer)
+            if (Settings.User.setMod_isSteerConnected)
             {
                 currentHello = traffic.helloFromAutoSteer < 3;
 
@@ -612,7 +565,7 @@ namespace AgIO
                 }
             }
 
-            if (isConnectedIMU)
+            if (Settings.User.setMod_isIMUConnected)
             {
                 currentHello = traffic.helloFromIMU < 3;
 
@@ -634,6 +587,27 @@ namespace AgIO
                 lastHelloGPS = currentHello;
                 ShowAgIO();
             }
+
+            currentHello = traffic.cntrGPSOutTool != 0;
+
+            if (currentHello != lastHelloGPSTool)
+            {
+                if (currentHello) btnGPSTool.BackColor = Color.LimeGreen;
+                else btnGPSTool.BackColor = Color.Red;
+                lastHelloGPSTool = currentHello;
+                ShowAgIO();
+            }
+
+            currentHello = traffic.cntrGPS_OutSerial != 0;
+
+            if (currentHello != lastHelloGPSOutSerial)
+            {
+                if (currentHello) btnGPS_Out.BackColor = Color.LimeGreen;
+                else btnGPS_Out.BackColor = Color.Red;
+                lastHelloGPSOutSerial = currentHello;
+                ShowAgIO();
+            }
+
         }
 
         private void FormLoop_Resize(object sender, EventArgs e)
@@ -680,7 +654,7 @@ namespace AgIO
 
         public void SetModulesOnOff()
         {
-            if (isConnectedIMU)
+            if (Settings.User.setMod_isIMUConnected)
             {
                 btnIMU.Visible = true;
                 lblIMUComm.Visible = true;
@@ -693,7 +667,7 @@ namespace AgIO
                 cboxIsIMUModule.BackgroundImage = Properties.Resources.AddNew;
             }
 
-            if (isConnectedMachine)
+            if (Settings.User.setMod_isMachineConnected)
             {
                 btnMachine.Visible = true;
                 lblMod2Comm.Visible = true;
@@ -706,7 +680,7 @@ namespace AgIO
                 cboxIsMachineModule.BackgroundImage = Properties.Resources.AddNew;
             }
 
-            if (isConnectedSteer)
+            if (Settings.User.setMod_isSteerConnected)
             {
                 btnSteer.Visible = true;
                 lblMod1Comm.Visible = true;
@@ -717,18 +691,6 @@ namespace AgIO
                 btnSteer.Visible = false;
                 lblMod1Comm.Visible = false;
                 cboxIsSteerModule.BackgroundImage = Properties.Resources.AddNew;
-            }
-
-            if (cboxIsIMUModule.Checked != Properties.Settings.Default.setMod_isIMUConnected ||
-                cboxIsSteerModule.Checked != Properties.Settings.Default.setMod_isSteerConnected ||
-                cboxIsMachineModule.Checked != Properties.Settings.Default.setMod_isMachineConnected)
-            {
-
-                Properties.Settings.Default.setMod_isIMUConnected = isConnectedIMU;
-                Properties.Settings.Default.setMod_isSteerConnected = isConnectedSteer;
-                Properties.Settings.Default.setMod_isMachineConnected = isConnectedMachine;
-
-                Properties.Settings.Default.Save();
             }
         }
 
@@ -741,12 +703,18 @@ namespace AgIO
             if (focusSkipCounter != 0)
             {
                 lblFromGPS.Text = traffic.cntrGPSOut == 0 ? "---" : ((traffic.cntrGPSOut >> 1)).ToString();
+                lblFromGPSTool.Text = traffic.cntrGPSOutTool == 0 ? "---" : ((traffic.cntrGPSOutTool >> 1)).ToString();
+                lblGPSOutSerial.Text = traffic.cntrGPS_OutSerial == 0 ? "---" : ((traffic.cntrGPS_OutSerial)).ToString();
 
                 //reset all counters
                 traffic.cntrGPSOut = 0;
+                traffic.cntrGPSOutTool = 0;
+                traffic.cntrGPS_OutSerial = 0;
 
-                lblCurentLon.Text = longitude.ToString("N7");
-                lblCurrentLat.Text = latitude.ToString("N7");
+                lblSlowGPSOut.Text = "";
+
+                lblCurentLon.Text = pnGPS.longitude.ToString("N7");
+                lblCurrentLat.Text = pnGPS.latitude.ToString("N7");
             }
         }
 
@@ -768,6 +736,5 @@ namespace AgIO
                 }
             }
         }
-
     }
 }

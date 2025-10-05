@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace AgIO
@@ -23,9 +22,32 @@ namespace AgIO
             keyboardString.SelectionLength = 0;
             keyboard1.Focus();
 
-            if (Thread.CurrentThread.CurrentCulture.Name == "fr")
+            //opening the subkey
+            RegistryKey regKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\AOG");
+
+            //create default keys if not existing
+            if (regKey == null)
             {
-                this.Height = 575;
+                RegistryKey Key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\AOG");
+
+                //storing the values
+                Key.SetValue("Language", "en");
+                Key.Close();
+
+                RegistrySettings.culture = "en";
+            }
+            else
+            {
+                //Language Registry Key
+                RegistrySettings.culture = regKey.GetValue("Language", "en").ToString();
+                if (RegistrySettings.culture == "") RegistrySettings.culture = "en";
+
+                regKey.Close();
+            }
+
+            if (RegistrySettings.culture == "fr")
+            {
+                this.Height = 587;
             }
             else
             {

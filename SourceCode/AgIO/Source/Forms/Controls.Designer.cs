@@ -1,10 +1,11 @@
 ﻿using AgIO.Properties;
-using AgLibrary.Logging;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace AgIO
@@ -27,55 +28,42 @@ namespace AgIO
 
         private void btnGPS_Out_Click(object sender, EventArgs e)
         {
-            StartGPS_Out();
+            GPS_OutSettings();
         }
 
         private void btnSlide_Click(object sender, EventArgs e)
         {
             if (this.Width < 600)
             {
-                this.Width = 760;
+                this.Width = 710;
                 isViewAdvanced = true;
                 btnSlide.BackgroundImage = Properties.Resources.ArrowGrnLeft;
-                sbRTCM.Clear();
-                lblMessages.Text = "Reading...";
                 threeMinuteTimer = secondsSinceStart;
-                lblMessagesFound.Text = "-";
-                aList.Clear();
-                rList.Clear();
             }
             else
             {
-                this.Width = 428;
+                this.Width = 530;
                 isViewAdvanced = false;
                 btnSlide.BackgroundImage = Properties.Resources.ArrowGrnRight;
-                aList.Clear();
-                rList.Clear();
-                lblMessages.Text = "Reading...";
-                lblMessagesFound.Text = "-";
-                aList.Clear();
-                rList.Clear();
             }
         }
 
         private void btnStartStopNtrip_Click(object sender, EventArgs e)
         {
-            if (Properties.Settings.Default.setNTRIP_isOn || Properties.Settings.Default.setRadio_isOn)
+            if (Settings.User.setNTRIP_isOn || Settings.User.setRadio_isOn)
             {
-                if (isNTRIP_RequiredOn || isRadio_RequiredOn)
+                if (Settings.User.setNTRIP_isOn || Settings.User.setRadio_isOn)
                 {
                     ShutDownNTRIP();
                     lblWatch.Text = "Stopped";
                     btnStartStopNtrip.Text = "OffLine";
-                    isNTRIP_RequiredOn = false;
-                    isRadio_RequiredOn = false;
+                    Settings.User.setNTRIP_isOn = false;
+                    Settings.User.setRadio_isOn = false;
                     lblNTRIP_IP.Text = "--";
                     lblMount.Text = "--";
                 }
                 else
                 {
-                    isNTRIP_RequiredOn = Properties.Settings.Default.setNTRIP_isOn;
-                    isRadio_RequiredOn = Properties.Settings.Default.setRadio_isOn;
                     lblWatch.Text = "Waiting";
                     lblNTRIP_IP.Text = "--";
                     lblMount.Text= "--";
@@ -118,12 +106,12 @@ namespace AgIO
 
         private void btnUDP_Click(object sender, EventArgs e)
         {
-            if (RegistrySettings.profileName == "")
+            if (RegistrySettings.profileName == "Default Profile")
             {
                 TimedMessageBox(3000, "Using Default Profile", "Choose Existing or Create New Profile");
                 return;
             }
-            if (!Settings.Default.setUDP_isOn) SettingsEthernet();
+            if (!Settings.User.setUDP_isOn) SettingsEthernet();
             else SettingsUDP();
         }
 
@@ -132,9 +120,14 @@ namespace AgIO
             StartAOG();
         }
 
+        private void btnModSim_Click(object sender, EventArgs e)
+        {
+            StartModsim();
+        }
+
         private void btnNTRIP_Click(object sender, EventArgs e)
         {
-            if (RegistrySettings.profileName == "")
+            if (RegistrySettings.profileName == "Default Profile")
             {
                 TimedMessageBox(3000, "Using Default Profile", "Choose Existing or Create New Profile");
                 return;
@@ -150,7 +143,7 @@ namespace AgIO
 
         private void btnRadio_Click(object sender, EventArgs e)
         {
-            if (RegistrySettings.profileName == "")
+            if (RegistrySettings.profileName == "Default Profile")
             {
                 TimedMessageBox(3000, "Using Default Profile", "Choose Existing or Create New Profile");
                 return;
@@ -174,12 +167,6 @@ namespace AgIO
                 }
             }
         }
-        private void lblMessages_Click(object sender, EventArgs e)
-        {
-            aList?.Clear();
-            sbRTCM.Clear();
-            sbRTCM.Append("Reset..");
-        }
 
         private void lblNTRIPBytes_Click(object sender, EventArgs e)
         {
@@ -189,27 +176,22 @@ namespace AgIO
         #endregion
 
         #region CheckBoxes
-        private void cboxAutoRunGPS_Out_Click(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.setDisplay_isAutoRunGPS_Out = cboxAutoRunGPS_Out.Checked;
-            Properties.Settings.Default.Save();
-        }
 
         private void cboxIsSteerModule_Click(object sender, EventArgs e)
         {
-            isConnectedSteer = cboxIsSteerModule.Checked;
+            Settings.User.setMod_isSteerConnected = cboxIsSteerModule.Checked;
             SetModulesOnOff();
         }
 
         private void cboxIsMachineModule_Click(object sender, EventArgs e)
         {
-            isConnectedMachine = cboxIsMachineModule.Checked;
+            Settings.User.setMod_isMachineConnected = cboxIsMachineModule.Checked;
             SetModulesOnOff();
         }
 
         private void cboxIsIMUModule_Click(object sender, EventArgs e)
         {
-            isConnectedIMU = cboxIsIMUModule.Checked;
+            Settings.User.setMod_isIMUConnected = cboxIsIMUModule.Checked;
             SetModulesOnOff();
         }
 
@@ -241,19 +223,19 @@ namespace AgIO
 
         private void serialPassThroughToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (RegistrySettings.profileName == "")
+            if (RegistrySettings.profileName == "Default Profile")
             {
                 TimedMessageBox(3000, "Using Default Profile", "Choose Existing or Create New Profile");
                 return;
             }
 
-            if (isRadio_RequiredOn)
+            if (Settings.User.setRadio_isOn)
             {
                 TimedMessageBox(2000, "Radio NTRIP ON", "Turn it off before using Serial Pass Thru");
                 return;
             }
 
-            if (isNTRIP_RequiredOn)
+            if (Settings.User.setNTRIP_isOn)
             {
                 TimedMessageBox(2000, "Air NTRIP ON", "Turn it off before using Serial Pass Thru");
                 return;
@@ -264,15 +246,14 @@ namespace AgIO
                 if (form.ShowDialog(this) == DialogResult.OK)
                 {
                     ////Clicked Save
-                    //Application.Restart();
-                    //Environment.Exit(0);
+                    //Program.Restart();
                 }
             }
         }
 
         private void toolStripMenuProfiles_Click(object sender, EventArgs e)
         {
-            if (RegistrySettings.profileName == "")
+            if (RegistrySettings.profileName == "Default Profile")
             {
                 TimedMessageBox(3000, "AgIO Default Profile Used", "Create or Choose a Profile");
             }
@@ -283,11 +264,12 @@ namespace AgIO
                 if (form.DialogResult == DialogResult.Yes)
                 {
                     Log.EventWriter("Program Reset: Saving or Selecting Profile");
-                    
+
+                    Settings.User.Save();
                     Program.Restart();
                 }
             }
-            this.Text = "AgIO  v" + Program.Version + "   Using Profile: " 
+            this.Text = "AgIO  v" + Application.ProductVersion.ToString(CultureInfo.InvariantCulture) + "   Using Profile: " 
                 + RegistrySettings.profileName;
         }
 
@@ -379,13 +361,13 @@ namespace AgIO
 
         private void SettingsNTRIP()
         {
-            if (isRadio_RequiredOn)
+            if (Settings.User.setRadio_isOn)
             {
                 TimedMessageBox(2000, "Radio NTRIP ON", "Turn it off before using NTRIP");
                 return;
             }
 
-            if (isSerialPass_RequiredOn)
+            if (Settings.User.setPass_isOn)
             {
                 TimedMessageBox(2000, "Serial NTRIP ON", "Turn it off before using NTRIP");
                 return;
@@ -406,24 +388,24 @@ namespace AgIO
 
         private void SettingsRadio()
         {
-            if (isSerialPass_RequiredOn)
+            if (Settings.User.setPass_isOn)
             {
                 TimedMessageBox(2000, "Serial Pass NTRIP ON", "Turn it off before using Radio NTRIP");
                 return;
             }
 
-            if (isNTRIP_RequiredOn)
+            if (Settings.User.setNTRIP_isOn)
             {
                 TimedMessageBox(2000, "Air NTRIP ON", "Turn it off before using Radio NTRIP");
                 return;
             }
 
-            if (isRadio_RequiredOn && isNTRIP_Connected)
+            if (Settings.User.setRadio_isOn && isNTRIP_Connected)
             {
                 ShutDownNTRIP();
                 lblWatch.Text = "Stopped";
                 btnStartStopNtrip.Text = "OffLine";
-                isRadio_RequiredOn = false;
+                Settings.User.setRadio_isOn = false;
             }
 
             using (var form = new FormRadio(this))
@@ -442,11 +424,11 @@ namespace AgIO
 
         private void StartAOG()
         {
-            Process[] processName = Process.GetProcessesByName("AgOpenGPS");
+            Process[] processName = Process.GetProcessesByName("AOG");
             if (processName.Length == 0)
             {
                 //Start application here
-                string strPath = Path.Combine(Application.StartupPath, "AgOpenGPS.exe");
+                string strPath = Path.Combine(Application.StartupPath, "AOG.exe");
 
                 try
                 {
@@ -457,8 +439,8 @@ namespace AgIO
                 }
                 catch
                 {
-                    TimedMessageBox(2000, "No File Found", "Can't Find AgOpenGPS");
-                    Log.EventWriter("Can't Find AgOpenGPS - File Not Found");
+                    TimedMessageBox(2000, "No File Found", "Can't Find AOG");
+                    Log.EventWriter("Can't Find AOG - File Not Found");
                 }
             }
             else
@@ -469,13 +451,13 @@ namespace AgIO
             }
         }
 
-        private void StartGPS_Out()
+        private void StartModsim()
         {
-            Process[] processName = Process.GetProcessesByName("GPS_Out");
+            Process[] processName = Process.GetProcessesByName("Modsim");
             if (processName.Length == 0)
             {
                 //Start application here
-                string strPath = Path.Combine(Application.StartupPath, "GPS_Out.exe");
+                string strPath = Path.Combine(Application.StartupPath, "Modsim.exe");
 
                 try
                 {
@@ -486,8 +468,8 @@ namespace AgIO
                 }
                 catch
                 {
-                    TimedMessageBox(2000, "No File Found", "Can't Find GPS_Out");
-                    Log.EventWriter("No File Found, Can't Find GPS_Out");
+                    TimedMessageBox(2000, "No File Found", "Can't Find Modsim");
+                    Log.EventWriter("Can't Find Modsim - File Not Found");
                 }
             }
             else
@@ -496,6 +478,42 @@ namespace AgIO
                 ShowWindow(processName[0].MainWindowHandle, 9);
                 SetForegroundWindow(processName[0].MainWindowHandle);
             }
+        }
+
+
+        private void GPS_OutSettings()
+        {
+            using (FormGPSOut form = new FormGPSOut(this))
+            {
+                form.ShowDialog(this);
+            }
+        }
+
+        public void KeypadToNUD(NumericUpDown sender, Form owner)
+        {
+            sender.BackColor = System.Drawing.Color.Red;
+            using (var form = new FormNumeric((double)sender.Minimum, (double)sender.Maximum, (double)sender.Value))
+            {
+                if (form.ShowDialog(owner) == DialogResult.OK)
+                {
+                    sender.Value = (decimal)form.ReturnValue;
+                }
+            }
+            sender.BackColor = System.Drawing.Color.AliceBlue;
+        }
+
+        public void KeyboardToText(TextBox sender, Form owner)
+        {
+            TextBox tbox = (TextBox)sender;
+            tbox.BackColor = System.Drawing.Color.Red;
+            using (var form = new FormKeyboard((string)tbox.Text))
+            {
+                if (form.ShowDialog(owner) == DialogResult.OK)
+                {
+                    tbox.Text = (string)form.ReturnString;
+                }
+            }
+            tbox.BackColor = System.Drawing.Color.AliceBlue;
         }
 
         private ToolStripDropDownButton toolStripDropDownButton1;

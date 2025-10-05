@@ -5,8 +5,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Windows.Forms;
-using AgIO.Controls;
-using AgLibrary.Logging;
 
 namespace AgIO
 {
@@ -41,13 +39,13 @@ namespace AgIO
             lblHostname.Text = Dns.GetHostName(); // Retrieve the Name of HOST
 
             lblNetworkHelp.Text =
-                Properties.Settings.Default.etIP_SubnetOne.ToString() + " . " +
-                Properties.Settings.Default.etIP_SubnetTwo.ToString() + " . " +
-                Properties.Settings.Default.etIP_SubnetThree.ToString();
+                Settings.User.etIP_SubnetOne.ToString() + " . " +
+                Settings.User.etIP_SubnetTwo.ToString() + " . " +
+                Settings.User.etIP_SubnetThree.ToString();
 
-            nudFirstIP.Value = ipNew[0] = ipCurrent[0] = Properties.Settings.Default.etIP_SubnetOne;
-            nudSecndIP.Value = ipNew[1] = ipCurrent[1] = Properties.Settings.Default.etIP_SubnetTwo;
-            nudThirdIP.Value = ipNew[2] = ipCurrent[2] = Properties.Settings.Default.etIP_SubnetThree;
+            nudFirstIP.Value = ipNew[0] = ipCurrent[0] = Settings.User.etIP_SubnetOne;
+            nudSecndIP.Value = ipNew[1] = ipCurrent[1] = Settings.User.etIP_SubnetTwo;
+            nudThirdIP.Value = ipNew[2] = ipCurrent[2] = Settings.User.etIP_SubnetThree;
 
             ScanNetwork();
         }
@@ -96,6 +94,20 @@ namespace AgIO
                 lblNewSubnet.Text = mf.scanReply.subnetStr;
             }
 
+            if (mf.scanReplyTool.isNewGPS)
+            {
+                //lblGPSIP.Text = mf.scanReply.GPS_IP;
+                mf.scanReplyTool.isNewGPS = false;
+                lblNewSubnetTool.Text = $"Tool IP: {mf.scanReplyTool.subnetStr}";
+            }
+
+            //if (mf.scanReplyTool.isNewSteer)
+            //{
+            //    //lblGPSIP.Text = mf.scanReply.GPS_IP;
+            //    mf.scanReplyTool.isNewGPS = false;
+            //    lblNewSubnetTool.Text = mf.scanReplyTool.subnetStr;
+            //}
+
             if (tickCounter == 4)
             {
                 if (mf.btnSteer.BackColor == Color.LimeGreen) lblBtnSteer.BackColor = Color.LimeGreen;
@@ -109,6 +121,9 @@ namespace AgIO
 
                 if (mf.btnIMU.BackColor == Color.LimeGreen) lblBtnIMU.BackColor = Color.LimeGreen;
                 else lblBtnIMU.BackColor = Color.Red;
+
+                if (mf.btnGPSTool.BackColor == Color.LimeGreen) lblBtnGPSTool.BackColor = Color.LimeGreen;
+                else lblBtnGPSTool.BackColor = Color.Red;
             }
 
             if (tickCounter > 5)
@@ -154,15 +169,15 @@ namespace AgIO
                                 {
                                     var properties = nic.GetIPStatistics();
                                     tboxNets.Text +=
-                                            info.Address + "  - " + nic.OperationalStatus + "\r\n";                                            
+                                            info.Address + "  - " + nic.OperationalStatus + "\r\n";
 
                                     tboxNets.Text += info.IPv4Mask.ToString() + "  " + nic.Name.ToString() + "\r\n";
-                                    tboxNets.Text += 
-                                        "->" + (properties.NonUnicastPacketsSent 
+                                    tboxNets.Text +=
+                                        "->" + (properties.NonUnicastPacketsSent
                                         + properties.UnicastPacketsSent).ToString()
 
                                         + "  <-" + (properties.NonUnicastPacketsReceived
-                                        + properties.UnicastPacketsReceived).ToString() + "\r\n"                                 
+                                        + properties.UnicastPacketsReceived).ToString() + "\r\n"
                                         + "\r\n";
                                 }
 
@@ -184,6 +199,7 @@ namespace AgIO
                                     {
                                         scanSocket.Bind(new IPEndPoint(info.Address, 9999));
                                         scanSocket.SendTo(scanModules, 0, scanModules.Length, SocketFlags.None, mf.epModuleSet);
+                                        scanSocket.SendTo(scanModules, 0, scanModules.Length, SocketFlags.None, mf.epModuleSetTool);
                                     }
                                     catch (Exception ex)
                                     {
@@ -248,6 +264,7 @@ namespace AgIO
                                         {
                                             scanSocket.Bind(new IPEndPoint(info.Address, 9999));
                                             scanSocket.SendTo(sendIPToModules, 0, sendIPToModules.Length, SocketFlags.None, mf.epModuleSet);
+                                            scanSocket.SendTo(sendIPToModules, 0, sendIPToModules.Length, SocketFlags.None, mf.epModuleSetTool);
                                         }
                                         catch (Exception ex)
                                         {
@@ -266,32 +283,33 @@ namespace AgIO
                     }
                 }
 
-                Properties.Settings.Default.etIP_SubnetOne = ipCurrent[0] = ipNew[0];
-                Properties.Settings.Default.etIP_SubnetTwo = ipCurrent[1] = ipNew[1];
-                Properties.Settings.Default.etIP_SubnetThree = ipCurrent[2] = ipNew[2];
-
-                Properties.Settings.Default.Save();
+                Settings.User.etIP_SubnetOne = ipCurrent[0] = ipNew[0];
+                Settings.User.etIP_SubnetTwo = ipCurrent[1] = ipNew[1];
+                Settings.User.etIP_SubnetThree = ipCurrent[2] = ipNew[2];
 
                 mf.epModule = new IPEndPoint(IPAddress.Parse(
-                    Properties.Settings.Default.etIP_SubnetOne.ToString() + "." +
-                    Properties.Settings.Default.etIP_SubnetTwo.ToString() + "." +
-                    Properties.Settings.Default.etIP_SubnetThree.ToString() + ".255"), 8888);
+                    Settings.User.etIP_SubnetOne.ToString() + "." +
+                    Settings.User.etIP_SubnetTwo.ToString() + "." +
+                    Settings.User.etIP_SubnetThree.ToString() + ".255"), 8888);
+
+                mf.epModuleTool = new IPEndPoint(IPAddress.Parse(
+                    Settings.User.etIP_SubnetOne.ToString() + "." +
+                    Settings.User.etIP_SubnetTwo.ToString() + "." +
+                    Settings.User.etIP_SubnetThree.ToString() + ".255"), 18888);
 
                 lblNetworkHelp.Text =
-                    Properties.Settings.Default.etIP_SubnetOne.ToString() + " . " +
-                    Properties.Settings.Default.etIP_SubnetTwo.ToString() + " . " +
-                    Properties.Settings.Default.etIP_SubnetThree.ToString();
+                    Settings.User.etIP_SubnetOne.ToString() + " . " +
+                    Settings.User.etIP_SubnetTwo.ToString() + " . " +
+                    Settings.User.etIP_SubnetThree.ToString();
             }
 
             pboxSendSteer.Visible = false;
             btnSerialCancel.Image = Properties.Resources.back_button;
-
-            Log.EventWriter("Subnet Uploaded: " + lblNetworkHelp.Text);
         }
 
         private void nudFirstIP_Click(object sender, EventArgs e)
         {
-            ((NumericUpDown)sender).ShowKeypad(this);
+            mf.KeypadToNUD((NumericUpDown)sender, this);
             ipNew[0] = (byte)nudFirstIP.Value;
             ipNew[1] = (byte)nudSecndIP.Value;
             ipNew[2] = (byte)nudThirdIP.Value;
@@ -334,14 +352,12 @@ namespace AgIO
 
         private void btnUDPOff_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.setUDP_isOn = false;
-            Properties.Settings.Default.setUDP_isSendNMEAToUDP = false;
-
-            Properties.Settings.Default.Save();
+            Settings.User.setUDP_isOn = false;
 
             mf.YesMessageBox("AgIO will Restart to Disable UDP Networking Features");
             Log.EventWriter("Program Reset: Turning UDP OFF");
 
+            Settings.User.Save();
             Program.Restart();
 
             Close();

@@ -87,8 +87,7 @@
             "19200",
             "38400",
             "57600",
-            "115200",
-            "460800"});
+            "115200"});
             this.cboxBaud.Location = new System.Drawing.Point(236, 24);
             this.cboxBaud.Name = "cboxBaud";
             this.cboxBaud.Size = new System.Drawing.Size(127, 37);

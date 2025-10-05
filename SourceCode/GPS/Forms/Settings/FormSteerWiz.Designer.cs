@@ -1435,7 +1435,6 @@
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.Color.White;
-            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel2.Controls.Add(this.btnSteerStatus);
             this.panel2.Controls.Add(this.label35);
             this.panel2.Controls.Add(this.label34);
@@ -1851,7 +1850,6 @@
             // 
             this.label91.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label91.BackColor = System.Drawing.Color.Linen;
-            this.label91.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label91.Font = new System.Drawing.Font("Tahoma", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label91.ForeColor = System.Drawing.Color.Black;
             this.label91.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -1936,7 +1934,6 @@
             // label95
             // 
             this.label95.BackColor = System.Drawing.Color.Linen;
-            this.label95.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label95.Font = new System.Drawing.Font("Tahoma", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label95.ForeColor = System.Drawing.Color.Black;
             this.label95.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -2115,7 +2112,6 @@
             // 
             this.label99.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label99.BackColor = System.Drawing.Color.Linen;
-            this.label99.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label99.Font = new System.Drawing.Font("Tahoma", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label99.ForeColor = System.Drawing.Color.Black;
             this.label99.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -2225,7 +2221,6 @@
             // label93
             // 
             this.label93.BackColor = System.Drawing.Color.Linen;
-            this.label93.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label93.Font = new System.Drawing.Font("Tahoma", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label93.ForeColor = System.Drawing.Color.Black;
             this.label93.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -2364,7 +2359,6 @@
             // label103
             // 
             this.label103.BackColor = System.Drawing.Color.Linen;
-            this.label103.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label103.Font = new System.Drawing.Font("Tahoma", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label103.ForeColor = System.Drawing.Color.Black;
             this.label103.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -4717,7 +4711,6 @@
             // 
             // panel3
             // 
-            this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel3.Controls.Add(this.tabWiz);
             this.panel3.Location = new System.Drawing.Point(5, 51);
             this.panel3.Name = "panel3";

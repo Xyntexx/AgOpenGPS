@@ -64,7 +64,6 @@
             this.flpRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.flpRight.AutoSize = true;
             this.flpRight.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.flpRight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.flpRight.Controls.Add(this.autoSteer);
             this.flpRight.Controls.Add(this.youTurn);
             this.flpRight.Controls.Add(this.autoSection);

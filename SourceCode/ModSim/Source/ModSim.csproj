@@ -1,15 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <OutputPath>..\..\..\AgOpenGPS\</OutputPath>
     <ApplicationIcon>ModSim_ico.ico</ApplicationIcon>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <EmbeddedResourceUseDependentUponConvention>true</EmbeddedResourceUseDependentUponConvention>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
   </PropertyGroup>

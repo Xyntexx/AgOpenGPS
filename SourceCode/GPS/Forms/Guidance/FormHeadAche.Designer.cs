@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.oglSelf = new OpenTK.GLControl();
+            this.oglSelf = new OpenTK.WinForms.GLControl(new OpenTK.WinForms.GLControlSettings() { Profile = OpenTK.Windowing.Common.ContextProfile.Compatability });
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.headingGroupBox = new System.Windows.Forms.GroupBox();
             this.rbtnLine = new System.Windows.Forms.RadioButton();
@@ -65,7 +65,6 @@
             this.oglSelf.Name = "oglSelf";
             this.oglSelf.Size = new System.Drawing.Size(700, 700);
             this.oglSelf.TabIndex = 183;
-            this.oglSelf.VSync = false;
             this.oglSelf.Load += new System.EventHandler(this.oglSelf_Load);
             this.oglSelf.Paint += new System.Windows.Forms.PaintEventHandler(this.oglSelf_Paint);
             this.oglSelf.MouseDown += new System.Windows.Forms.MouseEventHandler(this.oglSelf_MouseDown);
@@ -554,7 +553,7 @@
 
         #endregion
 
-        private OpenTK.GLControl oglSelf;
+        private OpenTK.WinForms.GLControl oglSelf;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Button btnExit;
         private System.Windows.Forms.Button btnCycleForward;

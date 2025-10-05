@@ -1,14 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <OutputPath>..\..\AgOpenGPS\</OutputPath>
     <ApplicationIcon>AOG.ico</ApplicationIcon>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <EmbeddedResourceUseDependentUponConvention>true</EmbeddedResourceUseDependentUponConvention>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <DebugType>none</DebugType>
@@ -24,9 +25,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\RepeatButtonControl.dll</HintPath>
     </Reference>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Windows.Forms.DataVisualization" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Windows.Forms.DataVisualization" Version="1.0.0-prerelease.20110.1" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="License.txt">
@@ -40,9 +43,13 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.6" />
     <PackageReference Include="Control.Draggable" Version="1.0.5049.269" />
-    <PackageReference Include="OpenTK.GLControl" Version="3.3.3" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="OpenTK" Version="4.8.2" />
+    <PackageReference Include="OpenTK.WinForms" Version="4.0.0-pre.8" />
     <PackageReference Include="WebEye.Controls.WinForms.WebCameraControl" Version="1.0.2" />
     <PackageReference Include="WinFormsMapControl" Version="1.1.0" />
   </ItemGroup>

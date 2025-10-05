@@ -1,3 +1,4 @@
+using OpenTK.Mathematics;
 ﻿using AgLibrary.Logging;
 using AgOpenGPS.Controls;
 using AgOpenGPS.Culture;

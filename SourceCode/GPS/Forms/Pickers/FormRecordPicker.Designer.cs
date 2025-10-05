@@ -161,8 +161,8 @@ namespace AgOpenGPS.Forms.Pickers
             // 
             // FormRecordPicker
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 23F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(972, 578);
             this.ControlBox = false;
             this.Controls.Add(this.labelPathOff);

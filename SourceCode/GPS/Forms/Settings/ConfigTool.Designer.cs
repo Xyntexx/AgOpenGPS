@@ -568,7 +568,16 @@ namespace AgOpenGPS
                 cboxSectionBoundaryControl.BackgroundImage = Properties.Resources.SectionOnBoundary;
             }
 
-            nudCutoffSpeed.Value = (decimal)Properties.Settings.Default.setVehicle_slowSpeedCutoff;
+            if (mf.isMetric)
+            {
+                nudCutoffSpeed.Value = (decimal)Properties.Settings.Default.setVehicle_slowSpeedCutoff;
+                lblTurnOffBelowUnits.Text = "Km/H";
+            }
+            else
+            {
+                nudCutoffSpeed.Value = (decimal)(Properties.Settings.Default.setVehicle_slowSpeedCutoff * 0.62137);
+                lblTurnOffBelowUnits.Text = "MPH";
+            }
 
             if (cboxIsUnique.Checked)
             {
@@ -1212,8 +1221,10 @@ namespace AgOpenGPS
         {
             if (((NudlessNumericUpDown)sender).ShowKeypad(this))
             {
-                mf.vehicle.slowSpeedCutoff = (double)nudCutoffSpeed.Value;
-                Properties.Settings.Default.setVehicle_slowSpeedCutoff = (double)nudCutoffSpeed.Value;
+                // Convert from MPH to km/h if imperial units are selected
+                double speedKmh = mf.isMetric ? (double)nudCutoffSpeed.Value : (double)nudCutoffSpeed.Value / 0.62137;
+                mf.vehicle.slowSpeedCutoff = speedKmh;
+                Properties.Settings.Default.setVehicle_slowSpeedCutoff = speedKmh;
             }
         }
 

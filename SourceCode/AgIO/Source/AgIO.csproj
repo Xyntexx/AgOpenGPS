@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <PublishDir>..\..\..\AgOpenGPS\</PublishDir>
     <ApplicationIcon>AgIO_ico.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

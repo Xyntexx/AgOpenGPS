@@ -64,7 +64,6 @@
             this.flpRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.flpRight.AutoSize = true;
             this.flpRight.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.flpRight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.flpRight.Controls.Add(this.autoSteer);
             this.flpRight.Controls.Add(this.youTurn);
             this.flpRight.Controls.Add(this.autoSection);
@@ -509,8 +508,8 @@
             // 
             // FormButtonsRightPanel
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.Silver;
             this.ClientSize = new System.Drawing.Size(741, 664);
             this.ControlBox = false;

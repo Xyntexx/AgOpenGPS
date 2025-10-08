@@ -1,3 +1,4 @@
+using OpenTK.Mathematics;
 ﻿using AgOpenGPS.Helpers;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;

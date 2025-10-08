@@ -19,7 +19,7 @@ namespace AgOpenGPS
         public static readonly bool IsDevelopVersion = Application.ProductVersion == "1.0.0.0";
 
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
             if (Mutex.WaitOne(TimeSpan.Zero, true))
             {
@@ -28,7 +28,16 @@ namespace AgOpenGPS
                 Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo(RegistrySettings.culture);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new FormGPS());
+
+                // Check for Avalonia demo mode
+                if (args.Length > 0 && args[0] == "--avalonia-demo")
+                {
+                    Application.Run(new FormAvaloniaDemo());
+                }
+                else
+                {
+                    Application.Run(new FormGPS());
+                }
             }
             else
             {

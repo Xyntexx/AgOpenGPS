@@ -273,7 +273,6 @@
             // textBox1
             // 
             this.textBox1.BackColor = System.Drawing.Color.LightCyan;
-            this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBox1.CausesValidation = false;
             this.textBox1.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBox1.Location = new System.Drawing.Point(17, 37);
@@ -385,7 +384,6 @@
             // 
             this.flp.AutoScroll = true;
             this.flp.BackColor = System.Drawing.Color.White;
-            this.flp.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.flp.Location = new System.Drawing.Point(88, 8);
             this.flp.Name = "flp";
             this.flp.Size = new System.Drawing.Size(450, 399);
@@ -677,7 +675,6 @@
             // textBox2
             // 
             this.textBox2.BackColor = System.Drawing.Color.LightCyan;
-            this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBox2.CausesValidation = false;
             this.textBox2.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.textBox2.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -1850,8 +1847,8 @@
             // 
             // FormBuildTracks
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.ClientSize = new System.Drawing.Size(1924, 757);
             this.ControlBox = false;

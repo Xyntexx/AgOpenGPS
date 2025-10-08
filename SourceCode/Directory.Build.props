@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <!-- Set C# language version to 8.0 for nullable reference types support -->
+    <LangVersion>8.0</LangVersion>
+
+    <!-- Enable nullable reference types -->
+    <Nullable>enable</Nullable>
+
+    <!-- Fix resource generation for WinForms projects -->
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+</Project>

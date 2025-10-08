@@ -75,7 +75,10 @@ namespace AgOpenGPS
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuFlagForm = new System.Windows.Forms.ToolStripMenuItem();
             this.cboxpRowWidth = new System.Windows.Forms.ComboBox();
-            this.oglZoom = new OpenTK.GLControl();
+            this.oglZoom = new OpenTK.WinForms.GLControl(new OpenTK.WinForms.GLControlSettings()
+            {
+                Profile = OpenTK.Windowing.Common.ContextProfile.Compatability
+            });
             this.panelDrag = new System.Windows.Forms.TableLayoutPanel();
             this.btnPathGoStop = new System.Windows.Forms.Button();
             this.btnPickPath = new System.Windows.Forms.Button();
@@ -99,8 +102,14 @@ namespace AgOpenGPS
             this.btnSection10Man = new System.Windows.Forms.Button();
             this.btnSection11Man = new System.Windows.Forms.Button();
             this.btnSection12Man = new System.Windows.Forms.Button();
-            this.oglMain = new OpenTK.GLControl();
-            this.oglBack = new OpenTK.GLControl();
+            this.oglMain = new OpenTK.WinForms.GLControl(new OpenTK.WinForms.GLControlSettings()
+            {
+                Profile = OpenTK.Windowing.Common.ContextProfile.Compatability
+            });
+            this.oglBack = new OpenTK.WinForms.GLControl(new OpenTK.WinForms.GLControlSettings()
+            {
+                Profile = OpenTK.Windowing.Common.ContextProfile.Compatability
+            });
             this.lblHz = new System.Windows.Forms.Label();
             this.statusStripLeft = new System.Windows.Forms.StatusStrip();
             this.toolStripDropDownButton4 = new System.Windows.Forms.ToolStripDropDownButton();
@@ -638,13 +647,11 @@ namespace AgOpenGPS
             // oglZoom
             // 
             this.oglZoom.BackColor = System.Drawing.Color.Black;
-            this.oglZoom.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.oglZoom.Location = new System.Drawing.Point(122, 63);
             this.oglZoom.Margin = new System.Windows.Forms.Padding(0);
             this.oglZoom.Name = "oglZoom";
             this.oglZoom.Size = new System.Drawing.Size(41, 44);
             this.oglZoom.TabIndex = 182;
-            this.oglZoom.VSync = false;
             this.oglZoom.Load += new System.EventHandler(this.oglZoom_Load);
             this.oglZoom.Paint += new System.Windows.Forms.PaintEventHandler(this.oglZoom_Paint);
             this.oglZoom.Resize += new System.EventHandler(this.oglZoom_Resize);
@@ -1065,7 +1072,6 @@ namespace AgOpenGPS
             this.oglMain.Name = "oglMain";
             this.oglMain.Size = new System.Drawing.Size(848, 601);
             this.oglMain.TabIndex = 180;
-            this.oglMain.VSync = false;
             this.oglMain.Load += new System.EventHandler(this.oglMain_Load);
             this.oglMain.Paint += new System.Windows.Forms.PaintEventHandler(this.oglMain_Paint);
             this.oglMain.MouseDown += new System.Windows.Forms.MouseEventHandler(this.oglMain_MouseDown);
@@ -1080,7 +1086,6 @@ namespace AgOpenGPS
             this.oglBack.Name = "oglBack";
             this.oglBack.Size = new System.Drawing.Size(500, 300);
             this.oglBack.TabIndex = 181;
-            this.oglBack.VSync = false;
             this.oglBack.Load += new System.EventHandler(this.oglBack_Load);
             this.oglBack.Paint += new System.Windows.Forms.PaintEventHandler(this.oglBack_Paint);
             this.oglBack.Resize += new System.EventHandler(this.oglBack_Resize);
@@ -2172,7 +2177,6 @@ namespace AgOpenGPS
             // lblGuidanceLine
             // 
             this.lblGuidanceLine.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.lblGuidanceLine.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lblGuidanceLine.Font = new System.Drawing.Font("Tahoma", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblGuidanceLine.Location = new System.Drawing.Point(211, 66);
             this.lblGuidanceLine.Name = "lblGuidanceLine";
@@ -3015,7 +3019,6 @@ namespace AgOpenGPS
             // 
             this.lblHardwareMessage.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.lblHardwareMessage.BackColor = System.Drawing.Color.Bisque;
-            this.lblHardwareMessage.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.lblHardwareMessage.Font = new System.Drawing.Font("Tahoma", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblHardwareMessage.ImageAlign = System.Drawing.ContentAlignment.BottomLeft;
             this.lblHardwareMessage.Location = new System.Drawing.Point(62, 110);
@@ -3154,9 +3157,9 @@ namespace AgOpenGPS
         public System.Windows.Forms.Button btnAutoYouTurn;
         public System.Windows.Forms.Button btnAutoSteer;
         private System.Windows.Forms.HScrollBar hsbarSteerAngle;
-        private OpenTK.GLControl oglZoom;
-        private OpenTK.GLControl oglMain;
-        private OpenTK.GLControl oglBack;
+        private OpenTK.WinForms.GLControl oglZoom;
+        private OpenTK.WinForms.GLControl oglMain;
+        private OpenTK.WinForms.GLControl oglBack;
         private System.Windows.Forms.ComboBox cboxpRowWidth;
         private System.Windows.Forms.Label lblHz;
         public System.Windows.Forms.Button btnContour;

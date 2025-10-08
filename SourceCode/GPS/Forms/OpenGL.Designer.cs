@@ -1,3 +1,4 @@
+using OpenTK.Mathematics;
 ﻿using System;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -952,7 +953,6 @@ namespace AgOpenGPS
 
             //Paint to context for troubleshooting
             //oglBack.MakeCurrent();
-            //oglBack.SwapBuffers();
 
             //determine if headland is in read pixel buffer left middle and right. 
             int start = 0, end = 0, tagged = 0, totalPixel = 0;
@@ -1377,7 +1377,6 @@ namespace AgOpenGPS
 
             ////Paint to context for troubleshooting
             //oglBack.MakeCurrent();
-            //oglBack.SwapBuffers();
 
             //file writer that runs all the time
             if (fileSaveAlwaysCounter > 60)
@@ -1524,7 +1523,6 @@ namespace AgOpenGPS
 
                 GL.Flush();
 
-                //oglZoom.SwapBuffers();
 
 
                 int grnHeight = oglZoom.Height;
@@ -1574,7 +1572,6 @@ namespace AgOpenGPS
 
                 //GL.Flush();
                 ////oglZoom.MakeCurrent();
-                ////oglZoom.SwapBuffers();
 
                 //if (oglZoom.Width != 400)
                 //{
@@ -1707,7 +1704,6 @@ namespace AgOpenGPS
                 //    //double scale = ((maxFieldDistance * maxFieldDistance) / (oglZoom.Height * oglZoom.Width) * (double)more)/10000;
 
                 //    oglZoom.MakeCurrent();
-                //    oglZoom.SwapBuffers();
                 //}
             }
         }

@@ -56,7 +56,6 @@ namespace AgOpenGPS
 
             Location = Properties.Settings.Default.setWindow_QuickABLocation;
 
-            nudHeading.Controls[0].Enabled = false;
             nudHeading.Value = 0;
 
             if (!ScreenHelper.IsOnScreen(Bounds))
@@ -399,7 +398,7 @@ namespace AgOpenGPS
             btnEnter_AB.Enabled = true;
             nudHeading.Enabled = true;
 
-            nudHeading.Value = (decimal)(glm.toDegrees(mf.ABLine.desHeading));
+            nudHeading.Value = glm.toDegrees(mf.ABLine.desHeading);
             timer1.Enabled = true;
             mf.Activate();
         }
@@ -407,23 +406,24 @@ namespace AgOpenGPS
         private void nudHeading_Click(object sender, EventArgs e)
         {
             timer1.Enabled = false;
+            // NudlessNumericUpDownEx handles keypad automatically via OnClick
+            // No need to call ShowKeypad() - just wait for ValueChanged event
+        }
 
-            if (((NudlessNumericUpDown)sender).ShowKeypad(this))
-            {
-                //original A pt. 
-                mf.ABLine.desHeading = glm.toRadians((double)nudHeading.Value);
+        private void nudHeading_ValueChanged(object sender, EventArgs e)
+        {
+            //original A pt.
+            mf.ABLine.desHeading = glm.toRadians(nudHeading.Value);
 
-                //start end of line
-                mf.ABLine.desPtB.easting = mf.ABLine.desPtA.easting + (Math.Sin(mf.ABLine.desHeading) * 200);
-                mf.ABLine.desPtB.northing = mf.ABLine.desPtA.northing + (Math.Cos(mf.ABLine.desHeading) * 200);
+            //start end of line
+            mf.ABLine.desPtB.easting = mf.ABLine.desPtA.easting + (Math.Sin(mf.ABLine.desHeading) * 200);
+            mf.ABLine.desPtB.northing = mf.ABLine.desPtA.northing + (Math.Cos(mf.ABLine.desHeading) * 200);
 
-                mf.ABLine.desLineEndA.easting = mf.ABLine.desPtA.easting - (Math.Sin(mf.ABLine.desHeading) * 1000);
-                mf.ABLine.desLineEndA.northing = mf.ABLine.desPtA.northing - (Math.Cos(mf.ABLine.desHeading) * 1000);
+            mf.ABLine.desLineEndA.easting = mf.ABLine.desPtA.easting - (Math.Sin(mf.ABLine.desHeading) * 1000);
+            mf.ABLine.desLineEndA.northing = mf.ABLine.desPtA.northing - (Math.Cos(mf.ABLine.desHeading) * 1000);
 
-                mf.ABLine.desLineEndB.easting = mf.ABLine.desPtA.easting + (Math.Sin(mf.ABLine.desHeading) * 1000);
-                mf.ABLine.desLineEndB.northing = mf.ABLine.desPtA.northing + (Math.Cos(mf.ABLine.desHeading) * 1000);
-            }
-            mf.Activate();
+            mf.ABLine.desLineEndB.easting = mf.ABLine.desPtA.easting + (Math.Sin(mf.ABLine.desHeading) * 1000);
+            mf.ABLine.desLineEndB.northing = mf.ABLine.desPtA.northing + (Math.Cos(mf.ABLine.desHeading) * 1000);
         }
 
         private void btnEnter_APlus_Click(object sender, EventArgs e)

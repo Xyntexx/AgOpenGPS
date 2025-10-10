@@ -61,7 +61,7 @@
             this.labelAPlus = new System.Windows.Forms.Label();
             this.btnCancel_APlus = new System.Windows.Forms.Button();
             this.btnEnter_APlus = new System.Windows.Forms.Button();
-            this.nudHeading = new AgOpenGPS.NudlessNumericUpDown();
+            this.nudHeading = new AgOpenGPS.NudlessNumericUpDownEx();
             this.btnAPlus = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.panelName.SuspendLayout();
@@ -69,7 +69,6 @@
             this.panelChoose.SuspendLayout();
             this.panelABLine.SuspendLayout();
             this.panelAPlus.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudHeading)).BeginInit();
             this.SuspendLayout();
             // 
             // lblCurveExists
@@ -565,30 +564,20 @@
             this.btnEnter_APlus.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.btnEnter_APlus.UseVisualStyleBackColor = false;
             this.btnEnter_APlus.Click += new System.EventHandler(this.btnEnter_APlus_Click);
-            // 
+            //
             // nudHeading
-            // 
-            this.nudHeading.BackColor = System.Drawing.Color.LightCyan;
+            //
             this.nudHeading.DecimalPlaces = 4;
             this.nudHeading.Font = new System.Drawing.Font("Tahoma", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.nudHeading.InterceptArrowKeys = false;
             this.nudHeading.Location = new System.Drawing.Point(25, 174);
-            this.nudHeading.Maximum = new decimal(new int[] {
-            360,
-            0,
-            0,
-            0});
+            this.nudHeading.Maximum = 360;
+            this.nudHeading.Minimum = 0;
+            this.nudHeading.Mode = AgLibrary.Controls.UnitMode.None;
             this.nudHeading.Name = "nudHeading";
-            this.nudHeading.ReadOnly = true;
-            this.nudHeading.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.nudHeading.Size = new System.Drawing.Size(195, 46);
             this.nudHeading.TabIndex = 413;
-            this.nudHeading.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.nudHeading.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
+            this.nudHeading.Value = 0;
+            this.nudHeading.ValueChanged += new System.EventHandler(this.nudHeading_ValueChanged);
             this.nudHeading.Click += new System.EventHandler(this.nudHeading_Click);
             // 
             // btnAPlus
@@ -643,7 +632,6 @@
             this.panelABLine.PerformLayout();
             this.panelAPlus.ResumeLayout(false);
             this.panelAPlus.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudHeading)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -674,7 +662,7 @@
         private System.Windows.Forms.Button btnEnter_AB;
         private System.Windows.Forms.Button btnALine;
         private System.Windows.Forms.Button btnBLine;
-        private NudlessNumericUpDown nudHeading;
+        private NudlessNumericUpDownEx nudHeading;
         private System.Windows.Forms.Panel panelAPlus;
         private System.Windows.Forms.Label labelAPlus;
         private System.Windows.Forms.Button btnCancel_APlus;

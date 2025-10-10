@@ -264,20 +264,8 @@ namespace AgOpenGPS
 
                     if (newCurList.Count > 1)
                     {
-                        vec3[] arr = new vec3[newCurList.Count];
-                        newCurList.CopyTo(arr);
-                        newCurList.Clear();
-
-                        for (int i = 0; i < (arr.Length - 1); i++)
-                        {
-                            arr[i].heading = Math.Atan2(arr[i + 1].easting - arr[i].easting, arr[i + 1].northing - arr[i].northing);
-                            if (arr[i].heading < 0) arr[i].heading += glm.twoPI;
-                            if (arr[i].heading >= glm.twoPI) arr[i].heading -= glm.twoPI;
-                        }
-
-                        arr[arr.Length - 1].heading = Math.Atan2(arr[0].easting - arr[arr.Length - 1].easting, arr[0].northing - arr[arr.Length - 1].northing);
-
-                        newCurList.AddRange(arr);
+                        //calculate headings for closed loop (water pivot is circular)
+                        newCurList.CalculateHeadings(true);
                     }
                 }
                 else
@@ -328,22 +316,11 @@ namespace AgOpenGPS
                     int cnt = newCurList.Count;
                     if (cnt > 6 && !ct.IsCancellationRequested)
                     {
+                        //calculate headings for the offset line (open line, not a loop)
+                        newCurList.CalculateHeadings(false);
+
                         vec3[] arr = new vec3[cnt];
                         newCurList.CopyTo(arr);
-
-                        newCurList.Clear();
-
-                        for (int i = 0; i < (arr.Length - 1); i++)
-                        {
-                            if (ct.IsCancellationRequested)
-                                break;
-                            arr[i].heading = Math.Atan2(arr[i + 1].easting - arr[i].easting, arr[i + 1].northing - arr[i].northing);
-                            if (arr[i].heading < 0) arr[i].heading += glm.twoPI;
-                            if (arr[i].heading >= glm.twoPI) arr[i].heading -= glm.twoPI;
-                        }
-
-                        arr[arr.Length - 1].heading = arr[arr.Length - 2].heading;
-
                         cnt = arr.Length;
                         double distance;
 
@@ -373,38 +350,13 @@ namespace AgOpenGPS
                         newCurList.Add(arr[cnt - 2]);
                         newCurList.Add(arr[cnt - 1]);
 
-                        //to calc heading based on next and previous points to give an average heading.
-                        cnt = newCurList.Count;
-                        arr = new vec3[cnt];
-                        cnt--;
-                        newCurList.CopyTo(arr);
-                        newCurList.Clear();
-
-                        newCurList.Add(new vec3(arr[0]));
-
-                        //middle points
-                        for (int i = 1; i < cnt; i++)
-                        {
-                            vec3 pt3 = new vec3(arr[i])
-                            {
-                                heading = Math.Atan2(arr[i + 1].easting - arr[i - 1].easting, arr[i + 1].northing - arr[i - 1].northing)
-                            };
-                            if (pt3.heading < 0) pt3.heading += glm.twoPI;
-                            newCurList.Add(pt3);
-                        }
-
-                        int k = arr.Length - 1;
-                        vec3 pt33 = new vec3(arr[k])
-                        {
-                            heading = Math.Atan2(arr[k].easting - arr[k - 1].easting, arr[k].northing - arr[k - 1].northing)
-                        };
-                        if (pt33.heading < 0) pt33.heading += glm.twoPI;
-                        newCurList.Add(pt33);
+                        //recalculate headings after smoothing with Catmull-Rom
+                        newCurList.CalculateHeadings(false);
 
                         if (!ct.IsCancellationRequested && mf.bnd.bndList.Count > 0 && !(track.mode == TrackMode.bndCurve))
                         {
                             int ptCnt = newCurList.Count - 1;
-
+                            vec3 pt33;
                             bool isAdding = false;
                             //end
                             while (mf.bnd.bndList[0].fenceLineEar.IsPointInPolygon(newCurList[newCurList.Count - 1]))
@@ -1250,38 +1202,6 @@ namespace AgOpenGPS
             }
         }
 
-        public void CalculateHeadings(ref List<vec3> xList)
-        {
-            //to calc heading based on next and previous points to give an average heading.
-            int cnt = xList.Count;
-            if (cnt > 3)
-            {
-                vec3[] arr = new vec3[cnt];
-                cnt--;
-                xList.CopyTo(arr);
-                xList.Clear();
-
-                vec3 pt3 = arr[0];
-                pt3.heading = Math.Atan2(arr[1].easting - arr[0].easting, arr[1].northing - arr[0].northing);
-                if (pt3.heading < 0) pt3.heading += glm.twoPI;
-                xList.Add(pt3);
-
-                //middle points
-                for (int i = 1; i < cnt; i++)
-                {
-                    pt3 = arr[i];
-                    pt3.heading = Math.Atan2(arr[i + 1].easting - arr[i - 1].easting, arr[i + 1].northing - arr[i - 1].northing);
-                    if (pt3.heading < 0) pt3.heading += glm.twoPI;
-                    xList.Add(pt3);
-                }
-
-                pt3 = arr[arr.Length - 1];
-                pt3.heading = Math.Atan2(arr[arr.Length - 1].easting - arr[arr.Length - 2].easting,
-                    arr[arr.Length - 1].northing - arr[arr.Length - 2].northing);
-                if (pt3.heading < 0) pt3.heading += glm.twoPI;
-                xList.Add(pt3);
-            }
-        }
 
         public void MakePointMinimumSpacing(ref List<vec3> xList, double minDistance)
         {

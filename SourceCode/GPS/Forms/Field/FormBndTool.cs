@@ -803,7 +803,7 @@ namespace AgOpenGPS
                 smooList.Add(arr[i]);
             }
 
-            mf.curve.CalculateHeadings(ref smooList);
+            smooList.CalculateHeadings(false);
 
             List<vec3> smList = new List<vec3>();
 
@@ -848,7 +848,7 @@ namespace AgOpenGPS
                 }
             }
 
-            mf.curve.CalculateHeadings(ref smooList);
+            smooList.CalculateHeadings(false);
 
             btnMakeBoundary.Enabled = true;
         }

@@ -164,9 +164,9 @@ namespace AgOpenGPS
             int cnt = mf.curve.desList.Count;
             if (cnt > 3)
             {
-                //make sure point distance isn't too big 
+                //make sure point distance isn't too big
                 mf.curve.MakePointMinimumSpacing(ref mf.curve.desList, 1.6);
-                mf.curve.CalculateHeadings(ref mf.curve.desList);
+                mf.curve.desList.CalculateHeadings(false);
 
                 mf.trk.gArr.Add(new CTrk());
                 //array number is 1 less since it starts at zero
@@ -194,7 +194,7 @@ namespace AgOpenGPS
                 //build the tail extensions
                 mf.curve.AddFirstLastPoints(ref mf.curve.desList);
                 SmoothAB(4);
-                mf.curve.CalculateHeadings(ref mf.curve.desList);
+                mf.curve.desList.CalculateHeadings(false);
 
                 //write out the Curve Points
                 foreach (vec3 item in mf.curve.desList)

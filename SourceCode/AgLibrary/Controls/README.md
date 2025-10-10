@@ -168,45 +168,109 @@ button.Click += (s, e) => {
 
 ### For AgOpenGPS Developers
 
-The `NudlessNumericUpDown` control requires integration with your application:
+#### Current Status (2025-10-10)
 
-1. **Create a wrapper class** in your application:
+✅ **IMPLEMENTED**: The enhanced `NudlessNumericUpDownEx` wrapper class is ready to use in new forms.
+
+⚠️ **NOT YET MIGRATED**: Existing forms still use the legacy `NudlessNumericUpDown` control for backward compatibility.
+
+#### How to Use NudlessNumericUpDownEx
+
+The wrapper class is already implemented in `SourceCode/GPS/Classes/CExtensionMethods.cs`:
+
 ```csharp
-public class NudlessNumericUpDownEx : AgLibrary.Controls.NudlessNumericUpDown
-{
-    public NudlessNumericUpDownEx()
-    {
-        var mf = Application.OpenForms["FormGPS"] as FormGPS;
+using AgOpenGPS;
 
-        CreateNumericForm = (min, max, val) => new FormNumeric(min, max, val);
+// In your form designer or code:
+var control = new NudlessNumericUpDownEx();
+control.Mode = AgLibrary.Controls.UnitMode.Small;  // Auto unit conversion
+control.Minimum = 0;
+control.Maximum = 100;
+control.DecimalPlaces = 2;
+control.Value = 25.5;
 
-        GetDisplayConversionFactor = (mode) => mode switch {
-            UnitMode.Small => mf?.m2InchOrCm ?? 1.0,
-            UnitMode.Large => mf?.m2FtOrM ?? 1.0,
-            _ => 1.0
-        };
-
-        GetStorageConversionFactor = (mode) => mode switch {
-            UnitMode.Small => mf?.inchOrCm2m ?? 1.0,
-            UnitMode.Large => mf?.ftOrMtoM ?? 1.0,
-            _ => 1.0
-        };
-    }
-}
+control.ValueChanged += (s, e) => {
+    // Handle value changes
+    double newValue = control.Value;  // Note: double, not decimal
+};
 ```
 
-2. **Use the wrapper** in your forms instead of the base control.
+The wrapper automatically:
+- Wires up `FormNumeric` for the keypad
+- Gets unit conversion factors from `FormGPS`
+- Supports `UnitMode.Small` (inches/cm) and `UnitMode.Large` (feet/meters)
 
-3. **Type differences**:
-   - Base control uses `double` (not `decimal`)
-   - Update existing code when migrating:
-     ```csharp
-     // Old
-     decimal value = nudControl.Value;
+#### Migration Path (For Future Work)
 
-     // New
-     double value = nudControl.Value;
-     ```
+To migrate an existing form from legacy `NudlessNumericUpDown` to `NudlessNumericUpDownEx`:
+
+1. **Replace the control type** in the designer file:
+   ```csharp
+   // Old
+   private NudlessNumericUpDown nudDistance;
+
+   // New
+   private NudlessNumericUpDownEx nudDistance;
+   ```
+
+2. **Update value handling** (decimal → double):
+   ```csharp
+   // Old
+   decimal value = nudDistance.Value;
+
+   // New
+   double value = nudDistance.Value;
+   ```
+
+3. **Remove ShowKeypad() calls** - the enhanced control handles clicks automatically:
+   ```csharp
+   // Old
+   private void nudDistance_Click(object sender, EventArgs e)
+   {
+       ((NudlessNumericUpDown)sender).ShowKeypad(this);
+       // ... save value ...
+   }
+
+   // New
+   private void nudDistance_Click(object sender, EventArgs e)
+   {
+       // No need to call ShowKeypad - handled automatically
+       // Just save the value
+   }
+   ```
+
+4. **Set UnitMode** if appropriate:
+   ```csharp
+   nudDistance.Mode = AgLibrary.Controls.UnitMode.Small;  // For cm/inch values
+   ```
+
+#### Forms Ready for Migration
+
+The following forms have simple NudlessNumericUpDown controls that are good candidates:
+
+- `FormNudge` - 1 control (nudSnapDistance) - snap distance setting
+- `FormRefNudge` - reference line nudge
+- `FormQuickAB` - quick AB line setup
+
+#### Type Compatibility
+
+**Important**: The enhanced control uses `double` values, while the legacy control uses `decimal`.
+
+```csharp
+// Legacy control
+NudlessNumericUpDown (inherits NumericUpDown)
+- Value type: decimal
+- Range: -79,228,162,514,264,337,593,543,950,335 to 79,228...
+- Precision: 28-29 significant digits
+
+// Enhanced control
+NudlessNumericUpDownEx (inherits Button)
+- Value type: double
+- Range: ±5.0 × 10^−324 to ±1.7 × 10^308
+- Precision: 15-17 significant digits
+
+For agricultural measurements (meters, centimeters), double provides more than enough precision.
+```
 
 ### For Other Applications
 
@@ -215,6 +279,30 @@ If using these controls outside AgOpenGPS:
 1. Implement the required delegates for `NudlessNumericUpDown`
 2. Create a form with `ReturnValue` property for numeric input
 3. Wire up conversion factors based on your application's settings
+
+Example for custom application:
+```csharp
+var control = new AgLibrary.Controls.NudlessNumericUpDown();
+
+control.CreateNumericForm = (min, max, val) => {
+    // Return your custom numeric input form
+    return new MyNumericForm(min, max, val);
+};
+
+control.GetDisplayConversionFactor = (mode) => {
+    // Return conversion factor for display
+    if (mode == UnitMode.Small && useImperial)
+        return 39.3701; // meters to inches
+    return 1.0;
+};
+
+control.GetStorageConversionFactor = (mode) => {
+    // Return inverse conversion for storage
+    if (mode == UnitMode.Small && useImperial)
+        return 0.0254; // inches to meters
+    return 1.0;
+};
+```
 
 ## Source
 

@@ -1,10 +1,15 @@
-﻿using System;
+﻿using AgLibrary.Controls;
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace AgOpenGPS
 {
+    /// <summary>
+    /// Legacy NudlessNumericUpDown - just hides spinner buttons.
+    /// Kept for backward compatibility with existing forms.
+    /// </summary>
     public class NudlessNumericUpDown : NumericUpDown
     {
         public NudlessNumericUpDown()
@@ -38,6 +43,46 @@ namespace AgOpenGPS
                     base.Value = value;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Enhanced NudlessNumericUpDown with touch-friendly keypad and unit conversion.
+    /// Use this for new forms or when migrating existing controls.
+    /// </summary>
+    public class NudlessNumericUpDownEx : AgLibrary.Controls.NudlessNumericUpDown
+    {
+        public NudlessNumericUpDownEx()
+        {
+            // Wire up the numeric form creator
+            CreateNumericForm = (min, max, val) => new FormNumeric(min, max, val);
+
+            // Set up unit conversion delegates - get values from FormGPS
+            GetDisplayConversionFactor = (mode) =>
+            {
+                var mf = Application.OpenForms["FormGPS"] as FormGPS;
+                if (mf == null) return 1.0;
+
+                if (mode == UnitMode.Small)
+                    return mf.m2InchOrCm;
+                else if (mode == UnitMode.Large)
+                    return mf.m2FtOrM;
+                else
+                    return 1.0;
+            };
+
+            GetStorageConversionFactor = (mode) =>
+            {
+                var mf = Application.OpenForms["FormGPS"] as FormGPS;
+                if (mf == null) return 1.0;
+
+                if (mode == UnitMode.Small)
+                    return mf.inchOrCm2m;
+                else if (mode == UnitMode.Large)
+                    return mf.ftOrMtoM;
+                else
+                    return 1.0;
+            };
         }
     }
 

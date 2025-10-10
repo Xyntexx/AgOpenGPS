@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AgLibrary\AgLibrary.csproj" />
+    <ProjectReference Include="..\GPS\AgOpenGPS.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
 
   <ItemGroup>

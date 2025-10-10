@@ -1,5 +1,6 @@
 ﻿using AgLibrary.Controls;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -123,6 +124,109 @@ namespace AgOpenGPS
             if (currentB == 255) currentB = 254;
 
             return Color.FromArgb(color.A, currentR, currentG, currentB);
+        }
+
+        /// <summary>
+        /// Offsets a list of vec3 points by a given distance perpendicular to their heading.
+        /// Filters out points that are too close to the original line or each other.
+        /// </summary>
+        /// <param name="points">List of points to offset</param>
+        /// <param name="distance">Distance to offset (perpendicular to heading)</param>
+        /// <param name="minDist">Minimum distance between consecutive offset points</param>
+        /// <param name="loop">Whether the points form a closed loop</param>
+        /// <returns>New list of offset points</returns>
+        public static List<vec3> OffsetLine(this List<vec3> points, double distance, double minDist, bool loop)
+        {
+            points.CalculateHeadings(loop);
+
+            var result = new List<vec3>();
+            int count = points.Count;
+
+            double distSq = distance * distance - 0.0001;
+
+            // Create offset points perpendicular to the heading
+            for (int i = 0; i < count; i++)
+            {
+                // Calculate the point offset perpendicular to the heading
+                var easting = points[i].easting + (Math.Cos(points[i].heading) * distance);
+                var northing = points[i].northing - (Math.Sin(points[i].heading) * distance);
+
+                bool add = true;
+
+                // Check if offset point is too close to any original point
+                for (int j = 0; j < count; j++)
+                {
+                    double check = glm.DistanceSquared(northing, easting, points[j].northing, points[j].easting);
+                    if (check < distSq)
+                    {
+                        add = false;
+                        break;
+                    }
+                }
+
+                if (add)
+                {
+                    // Check minimum distance from previous offset point
+                    if (result.Count > 0)
+                    {
+                        double dist = glm.DistanceSquared(northing, easting, result[result.Count - 1].northing, result[result.Count - 1].easting);
+                        if (dist > minDist)
+                            result.Add(new vec3(easting, northing, 0));
+                    }
+                    else
+                        result.Add(new vec3(easting, northing, 0));
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Calculates the heading for each point in a list based on adjacent points.
+        /// The heading is the average angle from the previous to the next point.
+        /// </summary>
+        /// <param name="points">List of points to calculate headings for (modified in place)</param>
+        /// <param name="loop">Whether the points form a closed loop</param>
+        public static void CalculateHeadings(this List<vec3> points, bool loop)
+        {
+            int cnt = points.Count;
+
+            if (cnt > 1)
+            {
+                vec3[] arr = new vec3[cnt];
+                cnt--;
+                points.CopyTo(arr);
+                points.Clear();
+
+                // First point heading
+                vec3 pt3 = arr[0];
+                if (loop)
+                    pt3.heading = Math.Atan2(arr[1].easting - arr[cnt].easting, arr[1].northing - arr[cnt].northing);
+                else
+                    pt3.heading = Math.Atan2(arr[1].easting - arr[0].easting, arr[1].northing - arr[0].northing);
+
+                if (pt3.heading < 0) pt3.heading += glm.twoPI;
+                points.Add(pt3);
+
+                // Middle points - average heading from previous to next point
+                for (int i = 1; i < cnt; i++)
+                {
+                    pt3 = arr[i];
+                    pt3.heading = Math.Atan2(arr[i + 1].easting - arr[i - 1].easting, arr[i + 1].northing - arr[i - 1].northing);
+                    if (pt3.heading < 0) pt3.heading += glm.twoPI;
+                    points.Add(pt3);
+                }
+
+                // Last point heading
+                pt3 = arr[cnt];
+                if (loop)
+                    pt3.heading = Math.Atan2(arr[0].easting - arr[cnt - 1].easting, arr[0].northing - arr[cnt - 1].northing);
+                else
+                    pt3.heading = Math.Atan2(arr[cnt].easting - arr[cnt - 1].easting, arr[cnt].northing - arr[cnt - 1].northing);
+
+                if (pt3.heading < 0) pt3.heading += glm.twoPI;
+                points.Add(pt3);
+            }
         }
     }
 
